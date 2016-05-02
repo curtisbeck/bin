@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ "$1" = "containers" ]; then
+  docker ps -a | grep $2 | awk '{print $1}' | xargs --no-run-if-empty docker rm
+else
+  docker images | grep $2 | awk '{print $3}' | xargs --no-run-if-empty docker rmi
+fi
