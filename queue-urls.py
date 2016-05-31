@@ -13,13 +13,13 @@ class Program:
         self._parse_args()
 
         urls = []
-        for line in fileinput.input():
+        for line in fileinput.input(files=('-')):
             url = line.strip()
             if url is not None:
                 urls.append(url)
 
         client = aws('sqs')
-        queue = client.get_queue_by_name(QueueName='signals-diffgen-test')
+        queue = client.get_queue_by_name(QueueName=self.args.queue)
         for chunk in chunks(urls, 20):
             msg = {
                 'urls': chunk
@@ -29,9 +29,9 @@ class Program:
             queue.send_message(MessageBody=msg_body)
 
     def _parse_args(self):
-        description = 'reads a list of urls from stdin and sends them in chunks to signals-diffgent-test queue'
+        description = 'reads a list of urls from stdin and sends them in chunks to an sqs queue'
         parser = argparse.ArgumentParser(description)
-        # parser.add_argument('--foo', required=True, help='placeholder')
+        parser.add_argument('--queue', required=True, help='e.g. signals-diffgen-test, signals-embedly-urls-test')
         self.args = parser.parse_args()
 
 
