@@ -22,11 +22,15 @@ class Program:
 
         field = self.args.field
         script_template = """if (ctx._source.containsKey("{}") && ctx._source["{}"] instanceof LinkedHashMap)
-                                ctx._source["{}"] = [ctx._source["{}"]]"""
+                                ctx._source["{}"] = [ctx._source["{}"]]
+                             else
+                                ctx.op = "none" """
         script = script_template.format(field, field, field, field)
 
         bulk_update_query = []
+        processed_count = 0
         for doc in scan:
+            processed_count += 1
             bulk_update_query.append(
                 {
                  '_op_type': 'update',
@@ -37,7 +41,8 @@ class Program:
                  'script': script
                 })
 
-            if 9 < len(bulk_update_query):
+            if 99 < len(bulk_update_query):
+                print("processed {} docs".format(processed_count))
                 helpers.bulk(es, bulk_update_query)
                 bulk_update_query = []
 
