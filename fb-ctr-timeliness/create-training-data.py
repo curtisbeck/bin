@@ -3,16 +3,21 @@
 import argparse
 import codecs
 import csv
+import datetime
+import dateutil.parser
 import elasticsearch
 import json
 import numpy
+import operator
 import os
+import sys
 
 from scipy.sparse import coo_matrix
 
 
 class Program:
     def __init__(self):
+        self._max_trend_pages_count = 20
         self._es = elasticsearch.Elasticsearch('signals-es-access-1.test.inspcloud.com')
 
     def main(self):
@@ -20,55 +25,127 @@ class Program:
         filename = os.path.join('data', 'HSW Facebook Posts With Post Filtered Dates.csv')
         with codecs.open(filename, encoding='utf-8', errors='ignore') as csv_file:
             reader = csv.DictReader(csv_file)
-            examples = []
+            loop_counter = 0
             for record in reader:
-                example = {
-                    'webpage': record['URL'],
-                    'first_hit': {},
-                    'best_hit': {
-                        'similarity': 0
-                    }
-                }
-                try:
-                    doc = self._get_es_webpage(record)
-                except:
+                loop_counter += 1
+                print('PROCESSING', loop_counter, record, file=sys.stderr)
+
+                doc = self._get_es_webpage(record)
+                if doc is None:
                     continue
-                esa_sig = doc['_source']['esaSignature']
-                trendpages = self._get_es_trendpages(esa_sig)
-                if 0 < trendpages['hits']['total']:
-                    hit = trendpages['hits']['hits'][0]
-                    first_similarity = _get_cosine_similarity(esa_sig, hit['_source']['esaSignature'])
-                    example['first_hit'] = {
-                        'trendpage':  hit['_id'],
-                        'similarity': first_similarity,
-                        'hit': 1
-                    }
 
-                    hit_counter = 1
-                    best_hit = {
-                        'trendpage':  hit['_id'],
-                        'similarity': first_similarity,
-                        'hit': 1
-                    }
-                    for hit in trendpages['hits']['hits'][1:]:
-                        hit_counter += 1
-                        similarity = _get_cosine_similarity(esa_sig, hit['_source']['esaSignature'])
-                        if best_hit['similarity'] < similarity:
-                            best_hit = {
-                                'trendpage': hit['_id'],
-                                'similarity': similarity,
-                                'hit': hit_counter
-                            }
-                    example['best_hit'] = best_hit
+                trend_id = self._get_best_trend_id(doc, record)
+                if trend_id is None:
+                    continue
 
-                examples.append(example)
+            print(json.dumps('TBD', sort_keys=True, indent=2))
 
-            examples.sort(key=lambda x: x['best_hit']['similarity'], reverse=True)
-            print(json.dumps(examples, sort_keys=True, indent=2))
+    def _get_best_trend_id(self, doc, csv_record):
+        esa_sig = doc['_source']['esaSignature']
+        trendpages = self._get_es_trendpages_by_signature(esa_sig)
+        if trendpages['hits']['total'] == 0:
+            return None
 
-    def _get_es_trendpages(self, esa_sig):
+        trend_urls = [hit['_id'] for hit in trendpages['hits']['hits']]
+        trend_ids = {}
+        for trend_url in trend_urls:
+            google_trends_time_series = self._get_es_google_trends_time_series_single(trend_url, csv_record['Posted'])
+            if google_trends_time_series['hits']['total'] == 0:
+                continue
+
+            trend_id = google_trends_time_series['hits']['hits'][0]['_source']['trendId']
+            if trend_id in trend_ids:
+                trend_ids[trend_id] += 1
+            else:
+                trend_ids[trend_id] = 1
+
+        if len(trend_ids) == 0:
+            return None
+
+        trend_scores = {}
+        for (k, v) in trend_ids.items():
+            google_trend_docs = self._get_es_google_trend(k)
+            urls = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
+            scoring_trend_pages = self._get_es_trendpages_by_urls(urls)
+            scores = [_get_cosine_similarity(esa_sig, hit['_source']['esaSignature'])
+                      for hit in scoring_trend_pages['hits']['hits']]
+            trend_scores[k] = sum(scores) / float(len(scores))
+
+        best_trend_id = max(trend_scores.items(), key=operator.itemgetter(1))[0]
+        google_trend_docs = self._get_es_google_trend(best_trend_id)
+
+        aa = csv_record['URL']
+        ab = trend_scores[best_trend_id]
+        ac = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
+
+        return None
+
+    def _get_es_google_trend(self, trend_id):
         query = {
-            'size': 20,
+            'size': self._max_trend_pages_count,
+            'query': {
+                'match': {'trendId': trend_id}
+            }
+        }
+
+        return self._es.search(index='google-trends-aggregator-20160207-000007',
+                               doc_type='googleTrendsTimeSeries',
+                               body=query)
+
+    def _get_es_google_trends_time_series_single(self, url, created_by):
+        window_end_date = dateutil.parser.parse(created_by)
+        window_begin_date = window_end_date - datetime.timedelta(days=14)
+        query = {
+            'size': 1,
+            'query': {
+                'bool': {
+                    'must': [
+                        {'range': {'createdTime': {'gte': window_begin_date, 'lte': window_end_date}}},
+                        {'term': {'trendUrl': url}}
+                    ]
+                }
+            }
+        }
+
+        return self._es.search(index='google-trends-aggregator-20160207-000007',
+                               doc_type='googleTrendsTimeSeries',
+                               body=query)
+
+    def _get_es_google_trends_time_series(self, urls, created_by):
+        window_end_date = dateutil.parser.parse(created_by)
+        window_begin_date = window_end_date - datetime.timedelta(days=14)
+        query = {
+            'size': self._max_trend_pages_count,
+            'query': {
+                'bool': {
+                    'must': [
+                        {'range': {'createdTime': {'gte': window_begin_date, 'lte': window_end_date}}},
+                        {'terms': {'trendUrl': urls}}
+                    ]
+                }
+            }
+        }
+
+        return self._es.search(index='google-trends-aggregator-20160207-000007',
+                               doc_type='googleTrendsTimeSeries',
+                               body=query)
+
+    def _get_es_trendpages_by_urls(self, urls):
+        query = {
+            'size': self._max_trend_pages_count,
+            'query': {
+                'terms': {'url': urls}
+            }
+        }
+
+        return self._es.search(index='signals_read',
+                               doc_type='trendpage',
+                               body=query,
+                               _source_include=['esaSignature'])
+
+    def _get_es_trendpages_by_signature(self, esa_sig):
+        query = {
+            'size': self._max_trend_pages_count,
             'query': {
                 'match': {'esaSignature': esa_sig}
             }
@@ -80,10 +157,14 @@ class Program:
                                _source_include=['esaSignature'])
 
     def _get_es_webpage(self, csv_record):
-        return self._es.get(index='signals_read',
-                            doc_type='webpage',
-                            id=csv_record['URL'],
-                            _source=['esaSignature'])
+        try:
+            return self._es.get(index='signals_read',
+                                doc_type='webpage',
+                                id=csv_record['URL'],
+                                _source=['esaSignature'])
+        except:
+            print('\t_get_es_webpage failed', file=sys.stderr)
+            return None
 
     def _parse_args(self):
         parser = argparse.ArgumentParser('generate training data file for linear modeling of facebook ctr')
@@ -99,6 +180,8 @@ def _get_cosine_similarity(sig_one, sig_two):
     vector_one = coo_matrix((meta_one['data'], (meta_one['row'], meta_one['col'])), shape=shape)
     vector_two = coo_matrix((meta_two['data'], (meta_two['row'], meta_two['col'])), shape=shape)
     inner = vector_two.transpose().dot(vector_one)
+    if inner.nnz == 0:
+        return float(0)
     magnitude_one = numpy.sqrt(vector_one.transpose().dot(vector_one))
     magnitude_two = numpy.sqrt(vector_two.transpose().dot(vector_two))
     similarity = inner / (magnitude_one * magnitude_two)
