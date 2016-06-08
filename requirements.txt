@@ -1,2 +1,4 @@
 elasticsearch
 matplotlib
+gensim
+nltk

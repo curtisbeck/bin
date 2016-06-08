@@ -12,16 +12,25 @@ import operator
 import os
 import sys
 
+from gensim import corpora, similarities
+from nltk.tokenize import word_tokenize
 from scipy.sparse import coo_matrix
+
+from analyzers import factory
 
 
 class Program:
     def __init__(self):
         self._max_trend_pages_count = 20
         self._es = elasticsearch.Elasticsearch('signals-es-access-1.test.inspcloud.com')
+        analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
+        self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
 
     def main(self):
         self._parse_args()
+        self._load_trend_ids()
+        self._load_gensim_dicts()
+        self._load_gensim_index()
         filename = os.path.join('data', 'HSW Facebook Posts With Post Filtered Dates.csv')
         with codecs.open(filename, encoding='utf-8', errors='ignore') as csv_file:
             reader = csv.DictReader(csv_file)
@@ -34,51 +43,180 @@ class Program:
                 if doc is None:
                     continue
 
-                trend_id = self._get_best_trend_id(doc, record)
-                if trend_id is None:
+                # trend_id = self._get_best_trend_id(doc, record)
+                trend = self._get_best_trend_id_via_gensim_index(doc)
+                if trend is None:
                     continue
+
+                google_trend_docs = self._get_es_google_trend(trend['id'])
+                aa_google_trend_docs = [hit['_source'] for hit in google_trend_docs['hits']['hits']]
+                aa_score = trend['score']
+                continue
 
             print(json.dumps('TBD', sort_keys=True, indent=2))
 
-    def _get_best_trend_id(self, doc, csv_record):
+    def _get_best_trend_id_via_gensim_index(self, doc):
+        title = doc['_source']['title']
+        content = doc['_source']['content']
+        if title is None and content is None:
+            return None
+        txt = ''
+        if title is not None:
+            txt += title
+        if content is not None:
+            txt += ' ' + content
+        txt_tokens = self._get_analyzed_tokens(txt)
+        if len(txt_tokens) == 0:
+            return None
+        doc_bow = self._title_content_dict.doc2bow(txt_tokens)
+        sims = self._gensim_index[doc_bow]
+        best_trend = {
+            'id': self._trend_ids[sims[0][0]],
+            'score': sims[0][1]
+        }
+        return best_trend
+
+    def _get_best_trend_id_via_esa_search(self, doc, csv_record):
         esa_sig = doc['_source']['esaSignature']
-        trendpages = self._get_es_trendpages_by_signature(esa_sig)
-        if trendpages['hits']['total'] == 0:
+        sig_vector = _parse_esa_signature(esa_sig)
+        esa_matched_trend_pages = self._get_es_trendpages_by_signature(esa_sig)
+        if esa_matched_trend_pages['hits']['total'] == 0:
             return None
 
-        trend_urls = [hit['_id'] for hit in trendpages['hits']['hits']]
-        trend_ids = {}
-        for trend_url in trend_urls:
+        esa_matched_trend_urls = [hit['_id'] for hit in esa_matched_trend_pages['hits']['hits']]
+        candidate_trend_ids = {}
+        for trend_url in esa_matched_trend_urls:
             google_trends_time_series = self._get_es_google_trends_time_series_single(trend_url, csv_record['Posted'])
             if google_trends_time_series['hits']['total'] == 0:
                 continue
 
             trend_id = google_trends_time_series['hits']['hits'][0]['_source']['trendId']
-            if trend_id in trend_ids:
-                trend_ids[trend_id] += 1
+            if trend_id in candidate_trend_ids:
+                candidate_trend_ids[trend_id] += 1
             else:
-                trend_ids[trend_id] = 1
+                candidate_trend_ids[trend_id] = 1
 
-        if len(trend_ids) == 0:
+        if len(candidate_trend_ids) == 0:
             return None
 
-        trend_scores = {}
-        for (k, v) in trend_ids.items():
-            google_trend_docs = self._get_es_google_trend(k)
-            urls = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
-            scoring_trend_pages = self._get_es_trendpages_by_urls(urls)
-            scores = [_get_cosine_similarity(esa_sig, hit['_source']['esaSignature'])
-                      for hit in scoring_trend_pages['hits']['hits']]
-            trend_scores[k] = sum(scores) / float(len(scores))
+        # trend_scores = self._score_trends_on_number_of_esa_matches(candidate_trend_ids)
+        # trend_scores = self._score_trends_on_esa_similarity_to_trends_vector_sum(sig_vector, candidate_trend_ids)
+        # trend_scores = self._score_trends_on_title_bow_similarity(doc['_source'], candidate_trend_ids)
+        trend_scores = self._score_trends_on_title_content_bow_similarity(doc['_source'], candidate_trend_ids)
 
         best_trend_id = max(trend_scores.items(), key=operator.itemgetter(1))[0]
         google_trend_docs = self._get_es_google_trend(best_trend_id)
 
-        aa = csv_record['URL']
-        ab = trend_scores[best_trend_id]
-        ac = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
+        aa_webpage = csv_record['URL']
+        aa_score = trend_scores[best_trend_id]
+        aa_eg_trends = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
 
         return None
+
+    def _score_trends_on_title_content_bow_similarity(self, webpage, trend_ids_dict):
+        title = webpage.get('title', '')
+        content = webpage.get('content', '')
+        txt = ''
+        if title is not None:
+            txt += title
+        if content is not None:
+            txt += ' ' + content
+        if txt == ' ':
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+        txt_tokens = self._get_analyzed_tokens(txt)
+        if len(txt_tokens) == 0:
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+        txt_bow = self._title_content_dict.doc2bow(txt_tokens)
+        if len(txt_bow) == 0:
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+
+        trend_scores = {}
+        for (k, v) in trend_ids_dict.items():
+            scoring_trend_pages = self._get_es_trend_pages_by_trend_id(k)
+            trend_bow = {}
+            for hit in scoring_trend_pages['hits']['hits']:
+                title = hit['_source']['title']
+                content = hit['_source']['content']
+                txt = ''
+                if title is not None:
+                    txt += title
+                if content is not None:
+                    txt += ' ' + content
+                txt_tokens = self._get_analyzed_tokens(txt)
+                if len(txt_tokens) == 0:
+                    continue
+                tmp_bow = self._title_content_dict.doc2bow(txt_tokens)
+                if len(tmp_bow) == 0:
+                    continue
+                for t in tmp_bow:
+                    if t[0] in trend_bow:
+                        trend_bow[t[0]] += t[1]
+                    else:
+                        trend_bow[t[0]] = t[1]
+
+            trend_bow = [(k, v) for k, v in trend_bow.items()]
+            v1 = _get_dictionary_feature_vector(txt_bow, self._title_content_dict)
+            v2 = _get_dictionary_feature_vector(trend_bow, self._title_content_dict)
+            trend_scores[k] = _get_cosine_similarity(v1, v2)
+        return trend_scores
+
+    def _score_trends_on_title_bow_similarity(self, webpage, trend_ids_dict):
+        title = webpage.get('title')
+        if title is None:
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+        title_tokens = self._get_analyzed_tokens(title)
+        if len(title_tokens) == 0:
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+        title_bow = self._title_dict.doc2bow(title_tokens)
+        if len(title_bow) == 0:
+            return {k: 0 for (k, v) in trend_ids_dict.items()}
+
+        trend_scores = {}
+        for (k, v) in trend_ids_dict.items():
+            scoring_trend_pages = self._get_es_trend_pages_by_trend_id(k)
+            trend_bow = {}
+            for hit in scoring_trend_pages['hits']['hits']:
+                title = hit['_source'].get('title')
+                if title is None:
+                    continue
+                title_tokens = self._get_analyzed_tokens(title)
+                if len(title_tokens) == 0:
+                    continue
+                tmp_bow = self._title_dict.doc2bow(title_tokens)
+                if len(tmp_bow) == 0:
+                    continue
+                for t in tmp_bow:
+                    if t[0] in trend_bow:
+                        trend_bow[t[0]] += t[1]
+                    else:
+                        trend_bow[t[0]] = t[1]
+
+            trend_bow = [(v, k) for k, v in trend_bow.items()]
+            v1 = _get_dictionary_feature_vector(title_bow, self._title_dict)
+            v2 = _get_dictionary_feature_vector(trend_bow, self._title_dict)
+            trend_scores[k] = _get_cosine_similarity(v1, v2)
+        return trend_scores
+
+    def _score_trends_on_esa_similarity_to_trends_vector_sum(self, webpage_esa_vector, trend_ids_dict):
+        trend_scores = {}
+        for (k, v) in trend_ids_dict.items():
+            scoring_trend_pages = self._get_es_trend_pages_by_trend_id(k)
+            if scoring_trend_pages is None:
+                trend_scores[k] = 0
+                continue
+            trend_vector = _parse_esa_signature(scoring_trend_pages['hits']['hits'][0]['_source']['esaSignature'])
+            for hit in scoring_trend_pages['hits']['hits'][1:]:
+                trend_vector += _parse_esa_signature(hit['_source']['esaSignature'])
+            trend_scores[k] = _get_cosine_similarity(webpage_esa_vector, trend_vector)
+        return trend_scores
+
+    def _score_trends_on_number_of_esa_matches(self, trend_ids_dict):
+        return trend_ids_dict
+
+    def _get_es_trend_pages_by_trend_id(self, trend_id):
+        google_trend_docs = self._get_es_google_trend(trend_id)
+        urls = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
+        return self._get_es_trendpages_by_urls(urls)
 
     def _get_es_google_trend(self, trend_id):
         query = {
@@ -141,7 +279,7 @@ class Program:
         return self._es.search(index='signals_read',
                                doc_type='trendpage',
                                body=query,
-                               _source_include=['esaSignature'])
+                               _source_include=['esaSignature', 'title', 'content'])
 
     def _get_es_trendpages_by_signature(self, esa_sig):
         query = {
@@ -161,10 +299,33 @@ class Program:
             return self._es.get(index='signals_read',
                                 doc_type='webpage',
                                 id=csv_record['URL'],
-                                _source=['esaSignature'])
+                                _source=['esaSignature', 'title', 'content'])
         except:
             print('\t_get_es_webpage failed', file=sys.stderr)
             return None
+
+    def _get_analyzed_tokens(self, string):
+        tokens = word_tokenize(string)
+
+        for analyzer in self._analyzers:
+            tokens = analyzer.analyze(tokens)
+
+        return tokens
+
+    def _load_trend_ids(self):
+        with open(os.path.join('out', 'trend-ids.js')) as f:
+            trends = json.load(f)
+        self._trend_ids = trends['ids']
+
+    def _load_gensim_dicts(self):
+        # self._title_dict = corpora.Dictionary.load(os.path.join('out', 'title-dict-unabridged.mm'))
+        # self._content_dict = corpora.Dictionary.load(os.path.join('out', 'content-dict-unabridged.mm'))
+        # self._content_dict.filter_extremes()
+        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-unabridged.mm'))
+        self._title_content_dict.filter_extremes(keep_n=1000)
+
+    def _load_gensim_index(self):
+        self._gensim_index = similarities.Similarity.load(fname=os.path.join('out', 'gensim-matrix-similarity'))
 
     def _parse_args(self):
         parser = argparse.ArgumentParser('generate training data file for linear modeling of facebook ctr')
@@ -172,13 +333,7 @@ class Program:
         self.args = parser.parse_args()
 
 
-def _get_cosine_similarity(sig_one, sig_two):
-    meta_one = _parse_esa_signature(sig_one)
-    meta_two = _parse_esa_signature(sig_two)
-    max_row_index = max(max(meta_one['row']), max(meta_two['row']))
-    shape = (max_row_index+1, 1)
-    vector_one = coo_matrix((meta_one['data'], (meta_one['row'], meta_one['col'])), shape=shape)
-    vector_two = coo_matrix((meta_two['data'], (meta_two['row'], meta_two['col'])), shape=shape)
+def _get_cosine_similarity(vector_one, vector_two):
     inner = vector_two.transpose().dot(vector_one)
     if inner.nnz == 0:
         return float(0)
@@ -196,7 +351,13 @@ def _parse_esa_signature(sig):
     col = numpy.zeros(len(row), dtype=numpy.int32)
     data = sig[1::2]
     data = [float(x) for x in data]
-    return {'row': row, 'col': col, 'data': data}
+    return coo_matrix((data, (row, col)), shape=(100000000, 1))
+
+
+def _get_dictionary_feature_vector(feature_tuples, dictionary):
+    [row, data] = zip(*feature_tuples)
+    col = numpy.zeros(len(row), dtype=numpy.int32)
+    return coo_matrix((data, (row, col)), shape=(len(dictionary.keys()), 1))
 
 if __name__ == '__main__':
     program = Program()
