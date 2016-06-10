@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f1ee6450-4543-4bd7-bdf0-1f98742b2ecd" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/corpus/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/corpus/hsw_subdomain.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/fb_ctr_timeliness/gen_subdomain_lists.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/curtisb.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/curtisb.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py" afterPath="$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py" afterPath="$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py" afterPath="$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
     </list>
     <ignored path="bin.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,46 +27,52 @@
     <favorites_list name="bin" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="cache_gensim_similarities.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="43">
-              <caret line="17" column="73" selection-start-line="17" selection-start-column="73" selection-end-line="17" selection-end-column="73" />
-              <folding>
-                <element signature="e#24#39#0" expanded="true" />
-                <marker date="1465423005948" expanded="true" signature="223:4427" placeholder="..." />
-                <marker date="1465423005948" expanded="true" signature="826:928" placeholder="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="create_training_data.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="175">
-              <caret line="35" column="45" selection-start-line="35" selection-start-column="45" selection-end-line="35" selection-end-column="45" />
-              <folding>
-                <element signature="e#24#39#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="create_dictionary.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
-              <caret line="62" column="40" selection-start-line="62" selection-start-column="40" selection-end-line="62" selection-end-column="40" />
-              <folding>
-                <element signature="e#24#39#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <splitter split-orientation="horizontal" split-proportion="0.43603936">
+      <split-first>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="hsw_subdomain.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/corpus/hsw_subdomain.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="425">
+                  <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+                  <folding>
+                    <element signature="e#0#20#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf>
+          <file leaf-file-name="gen_gensim_similarities.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_gensim_similarities.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="114">
+                  <caret line="33" column="0" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#24#39#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="gen_index.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1513">
+                  <caret line="89" column="21" selection-start-line="89" selection-start-column="21" selection-end-line="89" selection-end-column="21" />
+                  <folding>
+                    <element signature="e#24#39#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -97,6 +103,12 @@
         <option value="$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py" />
         <option value="$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py" />
         <option value="$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py" />
+        <option value="$PROJECT_DIR$/fb_ctr_timeliness/gen_indices.py" />
+        <option value="$PROJECT_DIR$/fb_ctr_timeliness/gen_subdomain_lists.py" />
+        <option value="$PROJECT_DIR$/corpus/hsw-vertical.py" />
+        <option value="$PROJECT_DIR$/corpus/hsw_vertical.py" />
+        <option value="$PROJECT_DIR$/corpus/hsw_subdomain.py" />
+        <option value="$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py" />
       </list>
     </option>
   </component>
@@ -175,7 +187,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="analyzers" />
+              <option name="myItemId" value="corpus" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -186,18 +198,19 @@
   <component name="PropertiesComponent">
     <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\ubuntu-src\bin" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\ubuntu-src\bin\fb_ctr_timeliness" />
       <recent name="C:\ubuntu-src\bin" />
       <recent name="C:\ubuntu-src\bin\fb-ctr-timeliness" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\ubuntu-src\bin" />
+    </key>
   </component>
-  <component name="RunManager" selected="Python.create_dictionary">
+  <component name="RunManager" selected="Python.gen_index money">
     <configuration default="false" name="create-training-data" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -211,23 +224,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="bin" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fb-ctr-timeliness/create-training-data.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="cache-gensim-similarities" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fb-ctr-timeliness" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="bin" />
-      <option name="SCRIPT_NAME" value="C:\ubuntu-src\bin\fb-ctr-timeliness\cache_gensim_similarities.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -279,6 +275,23 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="bin" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="gen_subdomain_lists" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fb_ctr_timeliness" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="bin" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fb_ctr_timeliness/gen_subdomain_lists.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -417,20 +430,38 @@
       <option name="USE_KEYWORD" value="false" />
       <method />
     </configuration>
-    <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="Python.create-training-data" />
-      <item index="1" class="java.lang.String" itemvalue="Python.cache-gensim-similarities" />
+    <configuration default="false" name="gen_index money" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fb_ctr_timeliness" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="bin" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py" />
+      <option name="PARAMETERS" value="--subdomain money" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <list size="6">
+      <item index="0" class="java.lang.String" itemvalue="Python.gen_index money" />
+      <item index="1" class="java.lang.String" itemvalue="Python.create-training-data" />
       <item index="2" class="java.lang.String" itemvalue="Python.cache_gensim_similarities" />
       <item index="3" class="java.lang.String" itemvalue="Python.create_training_data" />
       <item index="4" class="java.lang.String" itemvalue="Python.create_dictionary" />
+      <item index="5" class="java.lang.String" itemvalue="Python.gen_subdomain_lists" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.create_dictionary" />
-        <item index="1" class="java.lang.String" itemvalue="Python.create_training_data" />
-        <item index="2" class="java.lang.String" itemvalue="Python.cache_gensim_similarities" />
-        <item index="3" class="java.lang.String" itemvalue="Python.create-training-data" />
-        <item index="4" class="java.lang.String" itemvalue="Python.cache-gensim-similarities" />
+        <item index="0" class="java.lang.String" itemvalue="Python.gen_subdomain_lists" />
+        <item index="1" class="java.lang.String" itemvalue="Python.create_dictionary" />
+        <item index="2" class="java.lang.String" itemvalue="Python.create_training_data" />
+        <item index="3" class="java.lang.String" itemvalue="Python.cache_gensim_similarities" />
+        <item index="4" class="java.lang.String" itemvalue="Python.create-training-data" />
       </list>
     </recent_temporary>
   </component>
@@ -464,7 +495,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.42105263" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.42200956" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -538,20 +569,19 @@
           <option name="timeStamp" value="120" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <condition expression="loop_counter == 53" language="Python" />
-          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py</url>
-          <line>43</line>
-          <option name="timeStamp" value="121" />
+          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/gen_subdomain_lists.py</url>
+          <line>13</line>
+          <option name="timeStamp" value="134" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py</url>
-          <line>29</line>
-          <option name="timeStamp" value="122" />
+          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py</url>
+          <line>22</line>
+          <option name="timeStamp" value="138" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/cache_gensim_similarities.py</url>
-          <line>21</line>
-          <option name="timeStamp" value="128" />
+          <url>file://$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py</url>
+          <line>31</line>
+          <option name="timeStamp" value="149" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -561,65 +591,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="134" />
+      <option name="time" value="150" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/es-field-to-array.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="38" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#15#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/plot-esa-sig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="18" column="39" selection-start-line="18" selection-start-column="39" selection-end-line="18" selection-end-column="39" />
-          <folding>
-            <element signature="e#24#39#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fb-ctr-timeliness-training-data.py" />
-    <entry file="file://$PROJECT_DIR$/queue-urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="28" column="52" selection-start-line="28" selection-start-column="52" selection-end-line="28" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/es-field-to-array.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="952">
-          <caret line="56" column="92" selection-start-line="56" selection-start-column="92" selection-end-line="56" selection-end-column="92" />
-          <folding>
-            <element signature="e#0#15#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/plot-esa-sig.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -885,29 +861,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="43">
           <caret line="17" column="73" selection-start-line="17" selection-start-column="73" selection-end-line="17" selection-end-column="73" />
-          <folding>
-            <element signature="e#24#39#0" expanded="true" />
-            <marker date="1465423005948" expanded="true" signature="223:4427" placeholder="..." />
-            <marker date="1465423005948" expanded="true" signature="826:928" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" column="48" selection-start-line="17" selection-start-column="48" selection-end-line="17" selection-end-column="48" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="35" column="45" selection-start-line="35" selection-start-column="45" selection-end-line="35" selection-end-column="45" />
-          <folding>
-            <element signature="e#24#39#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -921,8 +875,88 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/create_dictionary.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="62" column="40" selection-start-line="62" selection-start-column="40" selection-end-line="62" selection-end-column="40" />
+        <state relative-caret-position="306">
+          <caret line="53" column="82" selection-start-line="53" selection-start-column="82" selection-end-line="53" selection-end-column="82" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/create_training_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="175">
+          <caret line="35" column="45" selection-start-line="35" selection-start-column="45" selection-end-line="35" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/evaluate_esa_matching.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_training_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="330" column="0" selection-start-line="330" selection-start-column="0" selection-end-line="330" selection-end-column="0" />
+          <folding>
+            <element signature="e#24#39#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_subdomain_lists.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="512">
+          <caret line="41" column="45" selection-start-line="40" selection-start-column="12" selection-end-line="44" selection-end-column="36" />
+          <folding>
+            <element signature="e#24#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_dictionary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="816">
+          <caret line="57" column="54" selection-start-line="56" selection-start-column="12" selection-end-line="57" selection-end-column="70" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/corpus/hsw_subdomain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#20#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_gensim_similarities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="114">
+          <caret line="33" column="0" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
+          <folding>
+            <element signature="e#24#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fb_ctr_timeliness/gen_index.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1513">
+          <caret line="89" column="21" selection-start-line="89" selection-start-column="21" selection-end-line="89" selection-end-column="21" />
           <folding>
             <element signature="e#24#39#0" expanded="true" />
           </folding>

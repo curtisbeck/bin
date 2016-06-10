@@ -5,6 +5,7 @@
       <w>matplotlib</w>
       <w>nltk</w>
       <w>scipy</w>
+      <w>subdomain</w>
       <w>trendpage</w>
     </words>
   </dictionary>
