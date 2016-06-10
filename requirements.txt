@@ -1,4 +1,6 @@
 elasticsearch
-matplotlib
 gensim
+matplotlib
+numpy
 nltk
+scipy

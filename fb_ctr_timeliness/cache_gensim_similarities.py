@@ -14,17 +14,23 @@ from analyzers import factory
 
 class Program:
     def __init__(self):
-        self._es = elasticsearch.Elasticsearch('signals-es-access-1.test.inspcloud.com')
+        self._es = elasticsearch.Elasticsearch('signals-es-access-2.test.inspcloud.com')
         analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
         self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
 
     def main(self):
         self._parse_args()
         self._load_gensim_dicts()
-        index = similarities.Similarity(os.path.join('out', 'index'), [], num_features=1000, num_best=10)
+        index = similarities.Similarity(
+            os.path.join('out', 'index', '20160608', 'shard'), [], num_features=1000, num_best=10)
+        indexed_trend_ids = []
         for doc_bow in self._corpus_generator():
-            index.add_documents([doc_bow])
-        index.save(fname=os.path.join('out', 'gensim-matrix-similarity'))
+            index.add_documents([doc_bow['bow']])
+            indexed_trend_ids.append(doc_bow['id'])
+        index.save(fname=os.path.join('out', 'gensim-similarity-20160608-index'))
+        indexed_trends = {'ids': indexed_trend_ids}
+        with open(os.path.join('out', 'gensim-similarity-20160608-ordinal.js'), 'w') as f:
+            json.dump(indexed_trends, f)
 
     def _corpus_generator(self):
         with open(os.path.join('out', 'trend-ids.js')) as f:
@@ -32,13 +38,14 @@ class Program:
         loop_counter = 0
         for trend_id in trends['ids']:
             loop_counter += 1
+
             print('{}/{} {}'.format(loop_counter, len(trends['ids']), trend_id), file=sys.stderr)
 
             trend_bow = self._get_trend_bow(trend_id)
             if trend_bow is None:
                 continue
 
-            yield trend_bow
+            yield {'id': trend_id, 'bow': trend_bow}
 
     def _get_trend_bow(self, trend_id):
         docs = self._get_es_trend_pages_by_trend_id(trend_id)
@@ -105,8 +112,7 @@ class Program:
                                _source_include=['title', 'content'])
 
     def _load_gensim_dicts(self):
-        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-unabridged.mm'))
-        self._title_content_dict.filter_extremes(keep_n=1000)
+        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-1000-tokens.mm'))
 
     def _get_analyzed_tokens(self, string):
         tokens = word_tokenize(string)

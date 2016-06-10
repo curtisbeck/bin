@@ -4,6 +4,8 @@
       <w>gensim</w>
       <w>matplotlib</w>
       <w>nltk</w>
+      <w>scipy</w>
+      <w>trendpage</w>
     </words>
   </dictionary>
 </component>

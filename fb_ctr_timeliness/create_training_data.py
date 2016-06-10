@@ -22,19 +22,20 @@ from analyzers import factory
 class Program:
     def __init__(self):
         self._max_trend_pages_count = 20
-        self._es = elasticsearch.Elasticsearch('signals-es-access-1.test.inspcloud.com')
+        self._es = elasticsearch.Elasticsearch('signals-es-access-2.test.inspcloud.com')
         analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
         self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
 
     def main(self):
         self._parse_args()
-        self._load_trend_ids()
+        self._load_indexed_trend_ids()
         self._load_gensim_dicts()
         self._load_gensim_index()
         filename = os.path.join('data', 'HSW Facebook Posts With Post Filtered Dates.csv')
         with codecs.open(filename, encoding='utf-8', errors='ignore') as csv_file:
             reader = csv.DictReader(csv_file)
             loop_counter = 0
+            matched_trends = []
             for record in reader:
                 loop_counter += 1
                 print('PROCESSING', loop_counter, record, file=sys.stderr)
@@ -44,16 +45,34 @@ class Program:
                     continue
 
                 # trend_id = self._get_best_trend_id(doc, record)
-                trend = self._get_best_trend_id_via_gensim_index(doc)
+                try:
+                    trend = self._get_best_trend_id_via_gensim_index(doc)
+                except:
+                    continue
+
                 if trend is None:
                     continue
 
-                google_trend_docs = self._get_es_google_trend(trend['id'])
-                aa_google_trend_docs = [hit['_source'] for hit in google_trend_docs['hits']['hits']]
-                aa_score = trend['score']
+                try:
+                    trend_pages = self._get_es_trend_pages_by_trend_id(trend['id'])
+                except:
+                    continue
+
+                match = {
+                    'webpage': doc['_id'],
+                    'trend_id': trend['id'],
+                    'trend_score': trend['score'],
+                    'trend_urls': [hit['_id'] for hit in trend_pages['hits']['hits']]
+                }
+                matched_trends.append(match)
                 continue
 
-            print(json.dumps('TBD', sort_keys=True, indent=2))
+            matched_trends.sort(key=lambda x: x['trend_score'], reverse=True)
+
+            with open(os.path.join('out', 'tmp.csv'), 'w') as f:
+                for match in matched_trends:
+                    f.write('{},{},{},{}\n'.format(
+                        match['webpage'], match['trend_id'], match['trend_score'], ','.join(match['trend_urls'])))
 
     def _get_best_trend_id_via_gensim_index(self, doc):
         title = doc['_source']['title']
@@ -79,7 +98,7 @@ class Program:
     def _get_best_trend_id_via_esa_search(self, doc, csv_record):
         esa_sig = doc['_source']['esaSignature']
         sig_vector = _parse_esa_signature(esa_sig)
-        esa_matched_trend_pages = self._get_es_trendpages_by_signature(esa_sig)
+        esa_matched_trend_pages = self._get_es_trend_pages_by_signature(esa_sig)
         if esa_matched_trend_pages['hits']['total'] == 0:
             return None
 
@@ -216,7 +235,7 @@ class Program:
     def _get_es_trend_pages_by_trend_id(self, trend_id):
         google_trend_docs = self._get_es_google_trend(trend_id)
         urls = list({hit['_source']['trendUrl'] for hit in google_trend_docs['hits']['hits']})
-        return self._get_es_trendpages_by_urls(urls)
+        return self._get_es_trend_pages_by_urls(urls)
 
     def _get_es_google_trend(self, trend_id):
         query = {
@@ -268,7 +287,7 @@ class Program:
                                doc_type='googleTrendsTimeSeries',
                                body=query)
 
-    def _get_es_trendpages_by_urls(self, urls):
+    def _get_es_trend_pages_by_urls(self, urls):
         query = {
             'size': self._max_trend_pages_count,
             'query': {
@@ -281,7 +300,7 @@ class Program:
                                body=query,
                                _source_include=['esaSignature', 'title', 'content'])
 
-    def _get_es_trendpages_by_signature(self, esa_sig):
+    def _get_es_trend_pages_by_signature(self, esa_sig):
         query = {
             'size': self._max_trend_pages_count,
             'query': {
@@ -312,8 +331,8 @@ class Program:
 
         return tokens
 
-    def _load_trend_ids(self):
-        with open(os.path.join('out', 'trend-ids.js')) as f:
+    def _load_indexed_trend_ids(self):
+        with open(os.path.join('out', 'gensim-similarity-20160608-ordinal.js')) as f:
             trends = json.load(f)
         self._trend_ids = trends['ids']
 
@@ -321,11 +340,11 @@ class Program:
         # self._title_dict = corpora.Dictionary.load(os.path.join('out', 'title-dict-unabridged.mm'))
         # self._content_dict = corpora.Dictionary.load(os.path.join('out', 'content-dict-unabridged.mm'))
         # self._content_dict.filter_extremes()
-        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-unabridged.mm'))
-        self._title_content_dict.filter_extremes(keep_n=1000)
+        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-1000-tokens.mm'))
+        # self._title_content_dict.filter_extremes(keep_n=1000)
 
     def _load_gensim_index(self):
-        self._gensim_index = similarities.Similarity.load(fname=os.path.join('out', 'gensim-matrix-similarity'))
+        self._gensim_index = similarities.Similarity.load(fname=os.path.join('out', 'gensim-similarity-20160608-index'))
 
     def _parse_args(self):
         parser = argparse.ArgumentParser('generate training data file for linear modeling of facebook ctr')
