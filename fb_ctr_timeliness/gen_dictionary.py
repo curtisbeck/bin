@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import elasticsearch
 import os
 
-from elasticsearch.helpers import scan
 from gensim import corpora
 from nltk.tokenize import word_tokenize
 from urllib.parse import urlparse
 
 from analyzers import factory
+from corpus import es_customer_webpages
 
 
 class Program:
@@ -22,39 +21,35 @@ class Program:
 
         dictionaries = {}
 
-        query = {
-            'query': {'match': {'customerId': 'howstuffworks'}}
-        }
-        es = elasticsearch.Elasticsearch('signals-es-access-1.test.inspcloud.com')
+        customer_webpages = es_customer_webpages.CustomerWebpages(self.args.customer_id)
         loop_counter = 0
-        for doc in scan(es, query=query, index='signals_read', doc_type='webpage', _source=['title', 'content']):
+        for doc in customer_webpages.corpus():
             loop_counter += 1
 
-            url = urlparse(doc['_id'])
-            if url.hostname is None:
-                continue
+            sub_domain = 'all'
+            if self.args.parse_subdomain:
+                url = urlparse(doc['_id'])
+                if url.hostname is None:
+                    continue
 
-            hostname_tokens = url.hostname.split('.')
-            if len(hostname_tokens) < 3:
-                continue
+                hostname_tokens = url.hostname.split('.')
+                if len(hostname_tokens) < 3:
+                    continue
 
-            sub_domain = hostname_tokens[-3]
+                sub_domain = hostname_tokens[-3]
+
             if sub_domain not in dictionaries:
                 dictionaries[sub_domain] = corpora.Dictionary()
 
-            title = doc['_source'].get('title', None)
-            content = doc['_source'].get('content', None)
-
-            if title is not None:
-                title_tokens = self.get_analyzed_tokens(doc['_source']['title'])
-                dictionaries[sub_domain].add_documents(documents=[title_tokens])
-
-            if content is not None:
-                content_tokens = self.get_analyzed_tokens(doc['_source']['content'])
-                dictionaries[sub_domain].add_documents(documents=[content_tokens])
+            fields = ['title', 'content']
+            for field in fields:
+                field_value = doc['_source'].get(field, None)
+                if field_value is not None:
+                    tokens = self.get_analyzed_tokens(field_value)
+                    dictionaries[sub_domain].add_documents(documents=[tokens])
 
         for k, v in dictionaries.items():
-            dictionary_name = 'hsw-{}-unabridged.mm'.format(k)
+            dictionary_name = '{}-{}-unabridged.mm'.format(self.args.customer_id, k)
             v.save(os.path.join('out', 'dictionary', dictionary_name))
 
     def get_analyzed_tokens(self, string):
@@ -66,8 +61,9 @@ class Program:
         return tokens
 
     def _parse_args(self):
-        parser = argparse.ArgumentParser('some useful description')
-        # parser.add_argument('--foo', required=True, help='placeholder')
+        parser = argparse.ArgumentParser("creates an unabridged dictionary from a customer's webpage corpus")
+        parser.add_argument('--customer_id', required=True, help='placeholder')
+        parser.add_argument('--parse_subdomain', type=bool, required=False, default=False)
         self.args = parser.parse_args()
 
 if __name__ == '__main__':
