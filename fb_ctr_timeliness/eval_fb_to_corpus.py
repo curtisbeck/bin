@@ -15,7 +15,6 @@ class Program:
     def __init__(self):
         analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
         self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
-        self._index_root_path = os.path.join('out', 'index', 'hsw')
 
     def main(self):
         self._parse_args()
@@ -35,16 +34,20 @@ class Program:
                 })
         matches.sort(key=lambda x: x['score'], reverse=True)
 
-        with open('tmp.txt', 'w') as f:
+        output_filename = '{}-{}-{}-{}.csv'.format(
+            self.args.customer_id, self.args.subdomain, self.args.fb_page, self.args.fb_dimension)
+        output_filename = os.path.join('out', 'eval', output_filename)
+        with open(output_filename, 'w') as f:
             for match in matches:
                 f.write('{}\t{}\t{}\n'.format(match['score'], match['socialMetricId'], match['webpage']))
 
     def _analyzed_corpus(self):
-        # provider = fb_social_metrics.FacebookSocialMetrics(self.args.page_name)
-        # fields = ['description', 'name']
-
-        provider = fb_trend.FacebookTrends(self.args.page_name)
-        fields = ['title', 'content']
+        if self.args.fb_dimension == 'trendpage':
+            provider = fb_trend.FacebookTrends(self.args.fb_page)
+            fields = ['title', 'content']
+        else:
+            provider = fb_social_metrics.FacebookSocialMetrics(self.args.fb_page)
+            fields = ['description', 'name']
 
         loop_counter = 0
         for doc in provider.corpus():
@@ -88,27 +91,32 @@ class Program:
         return tokens
 
     def _load_dictionary(self):
-        dictionary_name = 'hsw-{}.mm'.format(self._partition_key)
+        dictionary_name = '{}.mm'.format(self._partition_key)
         fqn = os.path.join('out', 'dictionary', dictionary_name)
         self._dictionary = corpora.Dictionary.load(fqn)
 
     def _load_index(self):
-        fqn_index_name = os.path.join(self._index_root_path, '{}-index'.format(self._partition_key))
-        self._index = similarities.Similarity.load(fname=fqn_index_name)
+        fqn_index_name = os.path.join('out', 'index', '{}-index'.format(self._partition_key))
+        self._index = similarities.Similarity.load(fqn_index_name)
+        self._index.output_prefix = fqn_index_name
+        self._index.check_moved()
 
     def _load_ordinals(self):
-        fqn_ordinal_name = os.path.join(self._index_root_path, '{}-ordinal.js'.format(self._partition_key))
+        fqn_ordinal_name = os.path.join('out', 'index', '{}-ordinal.js'.format(self._partition_key))
         with open(fqn_ordinal_name) as f:
             data = json.load(f)
             self._ordinals = data['ids']
 
     def _parse_args(self):
-        parser = argparse.ArgumentParser('scan fb social metrics and match to hsw subdomain pages')
+        parser = argparse.ArgumentParser("scan facebook corpus and match to customer's corpus pages")
+        parser.add_argument('--customer_id', required=True)
         parser.add_argument('--subdomain', required=True)
-        parser.add_argument('--page_name', required=True)
+        parser.add_argument('--fb_page', required=True)
+        parser.add_argument('--fb_dimension', choices=['social_metric', 'trendpage'], default='trendpage')
         parser.add_argument('--dictionary_version', default='unabridged')
         self.args = parser.parse_args()
-        self._partition_key = '{}-{}'.format(self.args.subdomain, self.args.dictionary_version)
+        self._partition_key = '{}-{}-{}'.format(
+            self.args.customer_id, self.args.subdomain, self.args.dictionary_version)
 
 
 if __name__ == '__main__':

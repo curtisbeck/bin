@@ -101,7 +101,8 @@ class Program:
         parser.add_argument('--subdomain', required=True)
         parser.add_argument('--dictionary_version', default='unabridged')
         self.args = parser.parse_args()
-        self._partition_key = '{}-{}-{}'.format(self.args.customer_id, self.args.subdomain, self.args.dictionary_version)
+        self._partition_key = '{}-{}-{}'.format(
+            self.args.customer_id, self.args.subdomain, self.args.dictionary_version)
 
 if __name__ == '__main__':
     program = Program()
