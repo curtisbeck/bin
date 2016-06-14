@@ -97,7 +97,7 @@ class Program:
 
     def _parse_args(self):
         parser = argparse.ArgumentParser('generates the gensim index')
-        parser.add_argument('--customer_id', required=True, help='placeholder')
+        parser.add_argument('--customer_id', required=True)
         parser.add_argument('--subdomain', required=True)
         parser.add_argument('--dictionary_version', default='unabridged')
         self.args = parser.parse_args()
