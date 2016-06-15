@@ -3,8 +3,9 @@ import json
 import os
 
 
-class HswSubdomain:
-    def __init__(self, subdomain):
+class CustomerSubdomain:
+    def __init__(self, customer_id, subdomain):
+        self._customer_id = customer_id
         self._subdomain = subdomain
         self._es = elasticsearch.Elasticsearch(
             ['signals-es-access-1.test.inspcloud.com', 'signals-es-access-2.test.inspcloud.com'],
@@ -18,7 +19,7 @@ class HswSubdomain:
         )
 
     def corpus(self):
-        file_name = 'hsw-{}.js'.format(self._subdomain)
+        file_name = '{}-{}.js'.format(self._customer_id, self._subdomain)
         fqn_name = os.path.join('out', 'corpus', file_name)
         with open(fqn_name) as f:
             corpus = json.load(f)

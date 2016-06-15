@@ -8,7 +8,7 @@ from gensim import corpora, similarities
 from nltk.tokenize import word_tokenize
 
 from analyzers import factory
-from corpus import fb_social_metrics, fb_trend
+from corpus import fb_social_metrics, fb_trend, es_id_list
 
 
 class Program:
@@ -21,6 +21,7 @@ class Program:
         self._load_dictionary()
         self._load_index()
         self._load_ordinals()
+        self._filter_dictionary()
 
         loop_counter = 0
         matches = []
@@ -34,6 +35,9 @@ class Program:
                 })
         matches.sort(key=lambda x: x['score'], reverse=True)
 
+        if self.args.fb_ids is not None:
+            exit()
+
         output_filename = '{}-{}-{}-{}.csv'.format(
             self.args.customer_id, self.args.subdomain, self.args.fb_page, self.args.fb_dimension)
         output_filename = os.path.join('out', 'eval', output_filename)
@@ -42,12 +46,7 @@ class Program:
                 f.write('{}\t{}\t{}\n'.format(match['score'], match['socialMetricId'], match['webpage']))
 
     def _analyzed_corpus(self):
-        if self.args.fb_dimension == 'trendpage':
-            provider = fb_trend.FacebookTrends(self.args.fb_page)
-            fields = ['title', 'content']
-        else:
-            provider = fb_social_metrics.FacebookSocialMetrics(self.args.fb_page)
-            fields = ['description', 'name']
+        provider, fields = self._get_corpus_provider_and_fields()
 
         loop_counter = 0
         for doc in provider.corpus():
@@ -90,10 +89,31 @@ class Program:
 
         return tokens
 
+    def _get_corpus_provider_and_fields(self):
+        if self.args.fb_dimension == 'trendpage':
+            fields = ['title', 'content']
+            if self.args.fb_ids is None:
+                provider = fb_trend.FacebookTrends(self.args.fb_page)
+            else:
+                provider = es_id_list.EsIdList(self.args.fb_ids, doc_type='trendpage')
+        else:
+            fields = ['description', 'name']
+            if self.args.fb_ids is None:
+                provider = fb_social_metrics.FacebookSocialMetrics(self.args.fb_page)
+            else:
+                provider = es_id_list.EsIdList(self.args.fb_ids, doc_type='facebookSocialMetrics')
+
+        return provider, fields
+
     def _load_dictionary(self):
         dictionary_name = '{}.mm'.format(self._partition_key)
         fqn = os.path.join('out', 'dictionary', dictionary_name)
         self._dictionary = corpora.Dictionary.load(fqn)
+
+    def _filter_dictionary(self):
+        bow = self._dictionary.doc2bow(['{__NUMBER__}'])
+        bow_ids = [x[0] for x in bow]
+        self._dictionary.filter_tokens(bad_ids=bow_ids)
 
     def _load_index(self):
         fqn_index_name = os.path.join('out', 'index', '{}-index'.format(self._partition_key))
@@ -114,6 +134,7 @@ class Program:
         parser.add_argument('--fb_page', required=True)
         parser.add_argument('--fb_dimension', choices=['social_metric', 'trendpage'], default='trendpage')
         parser.add_argument('--dictionary_version', default='unabridged')
+        parser.add_argument('--fb_ids', nargs='+')
         self.args = parser.parse_args()
         self._partition_key = '{}-{}-{}'.format(
             self.args.customer_id, self.args.subdomain, self.args.dictionary_version)

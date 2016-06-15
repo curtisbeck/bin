@@ -9,7 +9,7 @@ from gensim import corpora, similarities
 from nltk.tokenize import word_tokenize
 
 from analyzers import factory
-from corpus import hsw_subdomain, es_customer_webpages
+from corpus import customer_subdomain, es_customer_webpages
 
 
 class Program:
@@ -45,7 +45,7 @@ class Program:
         if self.args.subdomain == 'all':
             provider = es_customer_webpages.CustomerWebpages(self.args.customer_id)
         else:
-            provider = hsw_subdomain.HswSubdomain(self.args.subdomain)
+            provider = customer_subdomain.CustomerSubdomain(self.args.customer_id, self.args.subdomain)
         loop_counter = 0
         for doc in provider.corpus():
             loop_counter += 1
