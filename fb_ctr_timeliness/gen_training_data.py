@@ -25,12 +25,14 @@ class Program:
         self._es = elasticsearch.Elasticsearch('signals-es-access-2.test.inspcloud.com')
         analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
         self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
+        self._filter_bow_ids = set()
 
     def main(self):
         self._parse_args()
         self._load_indexed_trend_ids()
         self._load_gensim_dicts()
         self._load_gensim_index()
+        self._filter_dictionary()
         filename = os.path.join('data', 'HSW Facebook Posts With Post Filtered Dates.csv')
         with codecs.open(filename, encoding='utf-8', errors='ignore') as csv_file:
             reader = csv.DictReader(csv_file)
@@ -88,6 +90,7 @@ class Program:
         if len(txt_tokens) == 0:
             return None
         doc_bow = self._title_content_dict.doc2bow(txt_tokens)
+        doc_bow = self._filter_bow(doc_bow)
         sims = self._gensim_index[doc_bow]
         best_trend = {
             'id': self._trend_ids[sims[0][0]],
@@ -331,6 +334,9 @@ class Program:
 
         return tokens
 
+    def _filter_bow(self, bow):
+        return [x for x in bow if x[0] not in self._filter_bow_ids]
+
     def _load_indexed_trend_ids(self):
         with open(os.path.join('out', 'gensim-similarity-20160608-ordinal.js')) as f:
             trends = json.load(f)
@@ -340,8 +346,14 @@ class Program:
         # self._title_dict = corpora.Dictionary.load(os.path.join('out', 'title-dict-unabridged.mm'))
         # self._content_dict = corpora.Dictionary.load(os.path.join('out', 'content-dict-unabridged.mm'))
         # self._content_dict.filter_extremes()
-        self._title_content_dict = corpora.Dictionary.load(os.path.join('out', 'title-content-dict-1000-tokens.mm'))
+        self._title_content_dict = corpora.Dictionary.load(
+            os.path.join('out', 'dictionary', 'howstuffworks-all-1000-tokens.mm'))
         # self._title_content_dict.filter_extremes(keep_n=1000)
+
+    def _filter_dictionary(self):
+        # despite gensim doc that says dictionary.filter_tokens() doesn't change ids
+        # experience demonstrates otherwise
+        self._filter_bow_ids.add(self._title_content_dict.token2id['{__NUMBER__}'])
 
     def _load_gensim_index(self):
         self._gensim_index = similarities.Similarity.load(fname=os.path.join('out', 'gensim-similarity-20160608-index'))

@@ -31,5 +31,5 @@ class FacebookSocialMetrics:
                     query={"query": {"match": {"parentPageId": node_id}}},
                     index="signals_time_series_20160601",
                     doc_type="facebookSocialMetrics",
-                    _source=['description', 'name']
+                    _source=['description', 'name', 'message']
                     )

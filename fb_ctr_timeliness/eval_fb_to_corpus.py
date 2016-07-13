@@ -15,6 +15,7 @@ class Program:
     def __init__(self):
         analyzer_keys = ['alpha_numeric', 'lowercase', 'remove_stopwords', 'porterstem', 'tokenize_numbers']
         self._analyzers = [factory.get_analyzer(key) for key in analyzer_keys]
+        self._filter_bow_ids = set()
 
     def main(self):
         self._parse_args()
@@ -76,6 +77,7 @@ class Program:
             return None
 
         bow = self._dictionary.doc2bow(txt_tokens)
+        bow = self._filter_bow(bow)
         if len(bow) == 0:
             return None
 
@@ -89,6 +91,9 @@ class Program:
 
         return tokens
 
+    def _filter_bow(self, bow):
+        return [x for x in bow if x[0] not in self._filter_bow_ids]
+
     def _get_corpus_provider_and_fields(self):
         if self.args.fb_dimension == 'trendpage':
             fields = ['title', 'content']
@@ -97,7 +102,7 @@ class Program:
             else:
                 provider = es_id_list.EsIdList(self.args.fb_ids, doc_type='trendpage')
         else:
-            fields = ['description', 'name']
+            fields = ['description', 'name', 'message']
             if self.args.fb_ids is None:
                 provider = fb_social_metrics.FacebookSocialMetrics(self.args.fb_page)
             else:
@@ -111,9 +116,9 @@ class Program:
         self._dictionary = corpora.Dictionary.load(fqn)
 
     def _filter_dictionary(self):
-        bow = self._dictionary.doc2bow(['{__NUMBER__}'])
-        bow_ids = [x[0] for x in bow]
-        self._dictionary.filter_tokens(bad_ids=bow_ids)
+        # despite gensim doc that says dictionary.filter_tokens() doesn't change ids
+        # experience demonstrates otherwise
+        self._filter_bow_ids.add(self._dictionary.token2id['{__NUMBER__}'])
 
     def _load_index(self):
         fqn_index_name = os.path.join('out', 'index', '{}-index'.format(self._partition_key))
